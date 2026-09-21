@@ -30,6 +30,16 @@ sys.path.insert(0, str(REPO_ROOT))
 from router import auth, classify, cli_help, dispatch, guard, lock, receipt, usage  # noqa: E402
 
 
+def setUpModule():
+    # Tests supply fake provider runners; real host credentials must not
+    # change their gate order. Auth tests still inject overrides explicitly.
+    from unittest.mock import patch
+    clean_env = {k: v for k, v in os.environ.items() if k not in auth.BLOCKED_ENV_VARS}
+    env_patch = patch.dict(os.environ, clean_env, clear=True)
+    env_patch.start()
+    unittest.addModuleCleanup(env_patch.stop)
+
+
 def fake_proc(returncode=0, stdout="", stderr=""):
     return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
 
